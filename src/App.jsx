@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import flashcardsData from "./data.jsx";
 
-const STORAGE_KEY = "flashcards_state";
+const STORAGE_KEY = "flashcards_state_simple_repeat_v2";
 
 const saveState = (state) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -21,12 +21,26 @@ const loadState = () => {
   return saved ? JSON.parse(saved) : null;
 };
 
+// Function to shuffle an array
+const shuffleArray = (array) => {
+  let currentIndex = array.length,
+    randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+  return array;
+};
+
 const App = () => {
   const initialState = loadState();
 
   const [cards, setCards] = useState(() => {
     if (initialState?.cards) return initialState.cards;
-
     return flashcardsData.map((card, index) => ({
       ...card,
       id: index,
@@ -36,69 +50,53 @@ const App = () => {
     }));
   });
 
-  const [currentCardIndex, setCurrentCardIndex] = useState(
-    initialState?.currentCardIndex || 0
-  );
   const [selectedCards, setSelectedCards] = useState(
     () => new Set(initialState?.selectedCards || cards.map((c) => c.id))
   );
-  const [shuffledOrder, setShuffledOrder] = useState(
-    initialState?.shuffledOrder || null
-  );
+
+  const [studyQueue, setStudyQueue] = useState([]);
   const [showStats, setShowStats] = useState(false);
 
-  // Save to localStorage whenever key state changes
+  // THIS IS THE CORRECTED EFFECT
+  // It now ONLY runs when the card selection changes, NOT every time a card flips.
   useEffect(() => {
+    // Find all the cards the user has selected
+    const filteredById = flashcardsData.filter((card) =>
+      selectedCards.has(card.id)
+    );
+
+    // Get the full, up-to-date card objects from the main `cards` state
+    const filteredCardsFromState = cards.filter((card) =>
+      selectedCards.has(card.id)
+    );
+
+    // Sort them by how well they are known
+    const sorted = filteredCardsFromState.sort(
+      (a, b) => a.knowCount - b.knowCount
+    );
+
+    // Shuffle the queue and set it
+    setStudyQueue(shuffleArray(sorted.map((c) => c.id)));
+  }, [selectedCards]);
+
+  useEffect(() => {
+    // This effect saves progress to localStorage
     saveState({
       cards,
-      currentCardIndex,
       selectedCards: Array.from(selectedCards),
-      shuffledOrder,
     });
-  }, [cards, currentCardIndex, selectedCards, shuffledOrder]);
+  }, [cards, selectedCards]);
 
-  const getFilteredCards = () => {
-    const filtered = cards.filter((card) => selectedCards.has(card.id));
-
-    if (shuffledOrder) {
-      return shuffledOrder
-        .map((id) => filtered.find((card) => card.id === id))
-        .filter((card) => card !== undefined);
-    }
-
-    return filtered;
-  };
-
-  const filteredCards = getFilteredCards();
-  const currentCard = filteredCards[currentCardIndex];
-
-  // Cards with lower knowCount get higher weights (more likely to be shown again)
-  const getNextCardIndexWeighted = () => {
-    const weights = filteredCards.map((card) => {
-      if (card.status === "learned") return 0.1; // Rarely shown
-      return 6 - card.knowCount; // knowCount 0 → weight 6, knowCount 4 → weight 2, etc.
-    });
-
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
-    if (totalWeight === 0) return 0;
-
-    const random = Math.random() * totalWeight;
-    let cumulative = 0;
-    for (let i = 0; i < weights.length; i++) {
-      cumulative += weights[i];
-      if (random < cumulative) {
-        return i;
-      }
-    }
-
-    return 0;
-  };
+  const currentCardId = studyQueue.length > 0 ? studyQueue[0] : null;
+  const currentCard =
+    currentCardId !== null ? cards.find((c) => c.id === currentCardId) : null;
 
   const handleCardClick = () => {
     if (!currentCard) return;
 
-    setCards((prev) =>
-      prev.map((card) =>
+    // This function now ONLY handles flipping the card. It doesn't cause a reshuffle.
+    setCards((prevCards) =>
+      prevCards.map((card) =>
         card.id === currentCard.id
           ? { ...card, isFlipped: !card.isFlipped }
           : card
@@ -109,88 +107,76 @@ const App = () => {
   const handleKnow = () => {
     if (!currentCard) return;
 
+    // Update the master card's state
     setCards((prev) =>
       prev.map((card) => {
         if (card.id === currentCard.id) {
           const newKnowCount = card.knowCount + 1;
-          const newStatus = newKnowCount >= 5 ? "learned" : "learning";
           return {
             ...card,
             knowCount: newKnowCount,
-            status: newStatus,
-            isFlipped: false,
+            status: newKnowCount >= 5 ? "learned" : "learning",
+            isFlipped: false, // Reset flip state for next time
           };
         }
         return card;
       })
     );
 
-    nextCard();
+    // Advance the queue by removing the card from the front
+    setStudyQueue((prev) => prev.slice(1));
   };
 
   const handleDontKnow = () => {
     if (!currentCard) return;
 
+    // Update the master card's state
     setCards((prev) =>
       prev.map((card) =>
         card.id === currentCard.id
           ? {
               ...card,
-              knowCount:
-                currentCard.knowCount < 2 ? 0 : currentCard.knowCount - 2,
+              knowCount: Math.max(0, card.knowCount - 2),
               status: "learning",
-              isFlipped: false,
+              isFlipped: false, // Reset flip state for next time
             }
           : card
       )
     );
 
-    nextCard();
+    // Move the failed card to a few places back in the queue
+    setStudyQueue((prev) => {
+      if (prev.length <= 1) return prev;
+
+      const newQueue = [...prev];
+      const failedCardId = newQueue.shift();
+      const reinsertPosition = Math.min(2, newQueue.length);
+      newQueue.splice(reinsertPosition, 0, failedCardId);
+
+      return newQueue;
+    });
   };
 
-  const nextCard = () => {
-    if (filteredCards.length > 1) {
-      const nextIndex = getNextCardIndexWeighted();
-      setCurrentCardIndex(nextIndex);
-    }
-  };
-
-  const shuffleCards = () => {
-    const currentFiltered = cards.filter((card) => selectedCards.has(card.id));
-    const shuffled = [...currentFiltered].sort(() => Math.random() - 0.5);
-    setShuffledOrder(shuffled.map((card) => card.id));
-    setCurrentCardIndex(0);
-  };
-
-  const resetOrder = () => {
-    setShuffledOrder(null);
-    setCurrentCardIndex(0);
+  const resetProgress = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
   };
 
   const toggleCardSelection = (cardId) => {
     setSelectedCards((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(cardId)) {
-        newSet.delete(cardId);
-      } else {
-        newSet.add(cardId);
-      }
+      if (newSet.has(cardId)) newSet.delete(cardId);
+      else newSet.add(cardId);
       return newSet;
     });
-    setCurrentCardIndex(0);
-    setShuffledOrder(null);
   };
 
   const selectAll = () => {
     setSelectedCards(new Set(cards.map((c) => c.id)));
-    setCurrentCardIndex(0);
-    setShuffledOrder(null);
   };
 
   const deselectAll = () => {
     setSelectedCards(new Set());
-    setCurrentCardIndex(0);
-    setShuffledOrder(null);
   };
 
   const getStatusColor = (status) => {
@@ -211,14 +197,10 @@ const App = () => {
     new: cards.filter((c) => c.status === "new").length,
   };
 
-  const resetProgress = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
-  };
-
   return (
     <div className="min-h-screen w-screen flex justify-center items-center bg-neutral-900 text-neutral-100">
       <div className="w-full max-w-4xl p-6">
+        {/* ... The rest of your JSX remains the same ... */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">История Казахстана</h1>
           <p className="text-neutral-400">
@@ -229,20 +211,8 @@ const App = () => {
         <div className="bg-neutral-800 rounded-xl p-6 mb-6">
           <div className="flex flex-wrap gap-4 justify-center items-center">
             <button
-              onClick={shuffleCards}
-              className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white"
-            >
-              <Shuffle size={20} /> Перемешать
-            </button>
-            <button
-              onClick={resetOrder}
-              className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white"
-            >
-              <RotateCcw size={20} /> Сбросить порядок
-            </button>
-            <button
               onClick={() => setShowStats(!showStats)}
-              className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white"
+              className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center gap-2"
             >
               <BarChart3 size={20} /> Статистика
             </button>
@@ -269,15 +239,7 @@ const App = () => {
           </div>
 
           <div className="mt-4 text-center text-neutral-400">
-            Карточка {currentCardIndex + 1} из {filteredCards.length} выбранных
-            {filteredCards.length < cards.length && (
-              <span className="text-sm text-neutral-500 ml-2">
-                (всего {cards.length})
-              </span>
-            )}
-            {shuffledOrder && (
-              <span className="text-sm text-yellow-400 ml-2">(перемешано)</span>
-            )}
+            Осталось карточек в этой сессии: {studyQueue.length}
           </div>
         </div>
 
@@ -285,7 +247,7 @@ const App = () => {
           <div className="bg-neutral-800 rounded-xl p-6 mb-6">
             <h3 className="text-xl font-bold mb-4">Статистика изучения</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {["total", "learned", "learning", "new"].map((key) => (
+              {Object.keys(stats).map((key) => (
                 <div className="text-center" key={key}>
                   <div className={`text-2xl font-bold ${getStatusColor(key)}`}>
                     {stats[key]}
@@ -335,7 +297,7 @@ const App = () => {
                     {currentCard.status === "learned" && "Изучено"}
                     {currentCard.status === "learning" &&
                       `Изучаю (${currentCard.knowCount}/5)`}
-                    {currentCard.status === "new" && "Новое"}
+                    {currentCard.status === "new" && `Новое (0/5)`}
                   </span>
                 </div>
                 <div className="text-sm text-neutral-500">
@@ -346,17 +308,17 @@ const App = () => {
               </div>
             </div>
 
-            {!currentCard.isFlipped && (
+            {currentCard.isFlipped && (
               <div className="flex gap-4 justify-center mt-6">
                 <button
                   onClick={handleKnow}
-                  className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-green-500 font-semibold"
+                  className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-white font-semibold"
                 >
                   <CheckCircle size={24} /> Знаю
                 </button>
                 <button
                   onClick={handleDontKnow}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg text-red-500 font-semibold"
+                  className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg text-white font-semibold"
                 >
                   <XCircle size={24} /> Не знаю
                 </button>
@@ -364,8 +326,10 @@ const App = () => {
             )}
           </div>
         ) : (
-          <div className="text-center text-neutral-500 text-xl">
-            Нет выбранных карточек для изучения
+          <div className="text-center text-neutral-500 text-xl bg-neutral-800 rounded-xl p-8">
+            {selectedCards.size > 0
+              ? "Все карточки в этой сессии изучены!"
+              : "Выберите карточки для изучения."}
           </div>
         )}
 
@@ -398,7 +362,7 @@ const App = () => {
                     >
                       {card.status === "learned" && "✓"}
                       {card.status === "learning" && `${card.knowCount}/5`}
-                      {card.status === "new" && "•"}
+                      {card.status === "new" && "0/5"}
                     </span>
                     {selectedCards.has(card.id) ? (
                       <Eye size={16} className="text-white" />
