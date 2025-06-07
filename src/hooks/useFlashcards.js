@@ -176,6 +176,10 @@ export const useFlashcards = () => {
   );
 
   const resetProgress = () => {
+    const shouldReset = confirm(
+      "Вы уверены, что хотите сбросить весь прогресс?"
+    );
+    if (!shouldReset) return;
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
   };
