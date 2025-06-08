@@ -1,12 +1,20 @@
-# React + Vite
+# Карточки: История Казахстана (Flashcards: History of Kazakhstan)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and responsive flashcard web application designed to help users study the History of Kazakhstan. The app utilizes a simple spaced repetition system to prioritize cards the user knows less well, ensuring an efficient learning experience. All progress is saved directly in the user's browser via Local Storage.
 
-Currently, two official plugins are available:
+## ✨ Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    Spaced Repetition Logic: Cards are sorted based on how well you know them. Cards you struggle with appear more frequently.
+    Selective Study Sessions: Choose exactly which cards or topics you want to include in your current study session.
+    Progress Tracking: View your learning statistics at a glance, including the number of new, learning, and fully learned cards.
+    Persistent State: Your learning progress and selected cards are automatically saved in your browser, so you can pick up right where you left off.
+    Clean & Modern UI: Built with Tailwind CSS for a responsive, intuitive, and visually appealing interface.
+    Interactive Experience: Flip cards with a click and immediately provide feedback on your knowledge.
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+    Framework: React (with modern Hooks)
+    Build Tool: Vite (or Create React App)
+    Styling: Tailwind CSS
+    Icons: Lucide React
+    Language: JavaScript
