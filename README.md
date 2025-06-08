@@ -13,8 +13,8 @@ A modern and responsive flashcard web application designed to help users study t
 
 ## 🛠️ Tech Stack
 
-Framework: React (with modern Hooks)
-Build Tool: Vite (or Create React App)
-Styling: Tailwind CSS
-Icons: Lucide React
-Language: JavaScript
+- Framework: React (with modern Hooks)
+- Build Tool: Vite (or Create React App)
+- Styling: Tailwind CSS
+- Icons: Lucide React
+- Language: JavaScript
