@@ -4,12 +4,12 @@ import React from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import CardStatus from "./CardStatus";
 
-const FlashcardView = ({ card, onFlip, onKnow, onDontKnow }) => {
+const FlashcardView = ({ card, onFlip, onKnow, onDontKnow, activeButton }) => {
   return (
     <div className="mb-6 select-none">
       {/* The card itself */}
       <div
-        className="relative bg-neutral-800 rounded-xl p-8 min-h-[300px] flex flex-col justify-center items-center cursor-pointer hover:bg-neutral-700 transition-colors"
+        className="relative bg-neutral-800 rounded-xl p-8 min-h-[300px] flex flex-col justify-center items-center cursor-pointer hover:bg-neutral-700/50 transition-colors"
         onClick={onFlip}
       >
         <div className="text-center">
@@ -31,13 +31,13 @@ const FlashcardView = ({ card, onFlip, onKnow, onDontKnow }) => {
           <div className="flex gap-4 justify-center mt-6 absolute bottom-6 z-10">
             <button
               onClick={onKnow}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg text-white font-semibold"
+              className={`flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 transition-colors rounded-lg text-white font-semibold`}
             >
               <CheckCircle size={24} /> Знаю
             </button>
             <button
               onClick={onDontKnow}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg text-white font-semibold"
+              className={`flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-500 transition-colors rounded-lg text-white font-semibold`}
             >
               <XCircle size={24} /> Не знаю
             </button>

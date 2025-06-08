@@ -40,11 +40,6 @@ const CardSelector = ({ cards, selectedIds, onToggle }) => {
                       `${card.knowCount}/${LEARNED_THRESHOLD}`}
                     {card.status === "new" && `0/${LEARNED_THRESHOLD}`}
                   </span>
-                  {/* {isSelected ? (
-                    <Eye size={16} className="text-white" />
-                  ) : (
-                    <EyeOff size={16} className="text-neutral-500" />
-                  )} */}
                 </div>
               </div>
             );

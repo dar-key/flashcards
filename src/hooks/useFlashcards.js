@@ -63,6 +63,8 @@ export const useFlashcards = () => {
     return initialState?.studyQueue || [];
   });
 
+  const [activeButton, setActiveButton] = useState("");
+
   // Effect to save progress to localStorage whenever state changes
   useEffect(() => {
     saveState({
@@ -72,14 +74,27 @@ export const useFlashcards = () => {
     });
   }, [cards, selectedCardIds, studyQueue]);
 
-  // Effect to rebuild the study queue when the selection changes
+  // Effect to update the study queue when selection changes - PRESERVING ORDER
   useEffect(() => {
-    const filteredAndSorted = cards
-      .filter((card) => selectedCardIds.has(card.id))
-      .sort((a, b) => b.knowCount - a.knowCount);
+    setStudyQueue((prevQueue) => {
+      // Remove deselected cards from the queue
+      const filteredQueue = prevQueue.filter((cardId) =>
+        selectedCardIds.has(cardId)
+      );
 
-    setStudyQueue(Array.from(filteredAndSorted.map((c) => c.id)));
-  }, [selectedCardIds]); // Only rebuild when selection changes
+      // Find newly selected cards that aren't in the queue yet
+      const existingInQueue = new Set(filteredQueue);
+      const newlySelectedCards = cards
+        .filter(
+          (card) =>
+            selectedCardIds.has(card.id) && !existingInQueue.has(card.id)
+        )
+        .sort((a, b) => b.knowCount - a.knowCount); // Sort new cards by knowCount
+
+      // Add newly selected cards to the end of the queue (or you could add them at the beginning)
+      return [...filteredQueue, ...newlySelectedCards.map((c) => c.id)];
+    });
+  }, [selectedCardIds, cards]);
 
   // Memoize derived state to avoid recalculations
   const currentCard = useMemo(() => {
@@ -190,6 +205,53 @@ export const useFlashcards = () => {
     });
   }, []);
 
+  // Effect to handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if user is typing in an input field
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        return;
+      }
+
+      switch (e.code) {
+        case "Space":
+        case "ArrowUp":
+        case "ArrowDown":
+          e.preventDefault();
+          flipCard();
+          break;
+        default:
+          break;
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      // Ignore if user is typing in an input field
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        return;
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [flipCard, handleKnow, handleDontKnow]); // Dependencies for the keyboard handler
+
+  // Function to rebuild queue with fresh order (if you want to provide this option)
+  const rebuildQueue = useCallback(() => {
+    const filteredAndSorted = cards
+      .filter((card) => selectedCardIds.has(card.id))
+      .sort((a, b) => b.knowCount - a.knowCount);
+
+    setStudyQueue(filteredAndSorted.map((c) => c.id));
+  }, [cards, selectedCardIds]);
+
   const toggleCardSelection = useCallback((cardId) => {
     setSelectedCardIds((prev) => {
       const newSet = new Set(prev);
@@ -208,20 +270,18 @@ export const useFlashcards = () => {
   const showOnlyLearned = useCallback(() => {
     setSelectedCardIds(
       new Set(cards.filter((c) => c.status === "learned").map((c) => c.id))
-    ),
-      [];
-  });
+    );
+  }, [cards]);
 
-  const showOnlyNotLearned = useCallback(() => {
+  const continueLearning = useCallback(() => {
     setSelectedCardIds(
       new Set(
         cards
           .filter((c) => c.status === "new" || c.status === "learning")
           .map((c) => c.id)
       )
-    ),
-      [];
-  });
+    );
+  }, [cards]);
 
   return {
     cards,
@@ -238,6 +298,8 @@ export const useFlashcards = () => {
     deselectAll,
     showOnlyLearned,
     shuffleQueue,
-    showOnlyNotLearned,
+    continueLearning,
+    rebuildQueue, // New function to rebuild queue if needed
+    activeButton,
   };
 };

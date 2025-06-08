@@ -25,7 +25,8 @@ const App = () => {
     deselectAll,
     showOnlyLearned,
     shuffleQueue,
-    showOnlyNotLearned,
+    continueLearning,
+    activeButton,
   } = useFlashcards();
 
   return (
@@ -50,38 +51,32 @@ const App = () => {
               </button>
               <button
                 onClick={shuffleQueue}
-                className="px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm"
+                className="px-3 py-2 rounded-lg text-white text-sm"
               >
                 Перемешать
               </button>
               <button
                 onClick={showOnlyLearned}
-                className="px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm"
+                className="px-3 py-2 rounded-lg text-white text-sm"
               >
                 Повторить изученное
               </button>
               <button
-                onClick={showOnlyNotLearned}
-                className="px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm"
+                onClick={continueLearning}
+                className="px-3 py-2 rounded-lg text-white text-sm"
               >
-                Учиться
+                Учить
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={selectAll}
-                  className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm"
+                  className="px-3 py-2 rounded-lg text-white text-sm"
                 >
                   Выбрать все
                 </button>
-                {/* <button
-                  onClick={deselectAll}
-                  className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm"
-                >
-                  Снять все
-                </button> */}
                 <button
                   onClick={resetProgress}
-                  className="px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white text-sm"
+                  className="px-3 py-2 rounded-lg hover text-white text-sm"
                 >
                   Сбросить прогресс
                 </button>
@@ -100,6 +95,7 @@ const App = () => {
               onFlip={flipCard}
               onKnow={handleKnow}
               onDontKnow={handleDontKnow}
+              activeButton={activeButton}
             />
           ) : (
             <div className="text-center text-neutral-500 text-xl bg-neutral-800 rounded-xl p-8 mb-6">
