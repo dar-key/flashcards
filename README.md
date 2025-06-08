@@ -4,17 +4,17 @@ A modern and responsive flashcard web application designed to help users study t
 
 ## ✨ Key Features
 
-    Spaced Repetition Logic: Cards are sorted based on how well you know them. Cards you struggle with appear more frequently.
-    Selective Study Sessions: Choose exactly which cards or topics you want to include in your current study session.
-    Progress Tracking: View your learning statistics at a glance, including the number of new, learning, and fully learned cards.
-    Persistent State: Your learning progress and selected cards are automatically saved in your browser, so you can pick up right where you left off.
-    Clean & Modern UI: Built with Tailwind CSS for a responsive, intuitive, and visually appealing interface.
-    Interactive Experience: Flip cards with a click and immediately provide feedback on your knowledge.
+Spaced Repetition Logic: Cards are sorted based on how well you know them. Cards you struggle with appear more frequently.
+Selective Study Sessions: Choose exactly which cards or topics you want to include in your current study session.
+Progress Tracking: View your learning statistics at a glance, including the number of new, learning, and fully learned cards.
+Persistent State: Your learning progress and selected cards are automatically saved in your browser, so you can pick up right where you left off.
+Clean & Modern UI: Built with Tailwind CSS for a responsive, intuitive, and visually appealing interface.
+Interactive Experience: Flip cards with a click and immediately provide feedback on your knowledge.
 
 ## 🛠️ Tech Stack
 
-    Framework: React (with modern Hooks)
-    Build Tool: Vite (or Create React App)
-    Styling: Tailwind CSS
-    Icons: Lucide React
-    Language: JavaScript
+Framework: React (with modern Hooks)
+Build Tool: Vite (or Create React App)
+Styling: Tailwind CSS
+Icons: Lucide React
+Language: JavaScript
