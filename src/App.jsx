@@ -8,6 +8,7 @@ import StatsDisplay from "./components/StatsDisplay";
 import FlashcardView from "./components/FlashcardView";
 import CardSelector from "./components/CardSelector";
 import Auth from "./components/AuthComponent";
+import LoadingComponent from "./components/LoadingComponent";
 
 const App = () => {
   const [showStats, setShowStats] = useState(false);
@@ -27,18 +28,13 @@ const App = () => {
     showOnlyLearned,
     shuffleQueue,
     continueLearning,
+    copyProgressToClipboard,
+    importProgressFromClipboard,
   } = useFlashcards();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen w-screen flex justify-center items-center bg-neutral-900 text-neutral-100">
-        <h2 className="text-2xl font-bold">Loading Your Progress...</h2>
-      </div>
-    );
-  }
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center bg-neutral-900 text-neutral-100 font-sans">
+      {isLoading && <LoadingComponent />}
       <div className="w-full max-w-4xl p-6">
         <Auth />
 
@@ -89,6 +85,18 @@ const App = () => {
                   className="px-3 py-2 rounded-lg hover text-white text-sm"
                 >
                   Сбросить прогресс
+                </button>
+                <button
+                  onClick={copyProgressToClipboard}
+                  className="px-3 py-2 rounded-lg hover text-white text-sm"
+                >
+                  Копировать прогресс в буфер
+                </button>
+                <button
+                  onClick={importProgressFromClipboard}
+                  className="px-3 py-2 rounded-lg hover text-white text-sm"
+                >
+                  Импорт из буфера
                 </button>
               </div>
             </div>

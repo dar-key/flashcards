@@ -30,6 +30,7 @@ export const useFlashcards = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true);
       // If there's no logged-in user, load the default data for guest usage
       if (!user) {
         const defaultCards = flashcardsData.map((card, index) => ({
@@ -298,6 +299,38 @@ export const useFlashcards = () => {
     [cards]
   );
 
+  const copyProgressToClipboard = useCallback(() => {
+    const payload = {
+      cards,
+      selectedCardIds: Array.from(selectedCardIds),
+      studyQueue,
+    };
+    const textToCopy = JSON.stringify(payload, null, 2);
+    navigator.clipboard.writeText(textToCopy);
+  }, [cards]);
+
+  const importProgressFromClipboard = useCallback(() => {
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        try {
+          const confirmImport = confirm(
+            "Вы уверены, что хотите импортировать данные из буфера обмена?"
+          );
+          if (!confirmImport) return;
+          const payload = JSON.parse(text);
+          setCards(payload.cards);
+          setSelectedCardIds(new Set(payload.selectedCardIds));
+          setStudyQueue(payload.studyQueue);
+        } catch (error) {
+          console.error("Error parsing clipboard data:", error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error reading clipboard data:", error);
+      });
+  });
+
   const showOnlyLearned = useCallback(() => {
     setSelectedCardIds(
       new Set(cards.filter((c) => c.status === "learned").map((c) => c.id))
@@ -331,5 +364,7 @@ export const useFlashcards = () => {
     shuffleQueue,
     continueLearning,
     rebuildQueue, // New function to rebuild queue if needed
+    copyProgressToClipboard,
+    importProgressFromClipboard,
   };
 };
