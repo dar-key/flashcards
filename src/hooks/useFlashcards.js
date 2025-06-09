@@ -96,12 +96,13 @@ export const useFlashcards = () => {
         selectedCardIds: Array.from(selectedCardIds),
         studyQueue,
       };
+      console.log("Saving... ", payload);
       setDoc(docRef, payload, { merge: true }); // { merge: true } prevents overwriting other fields
     }, 2000);
 
     // Cleanup function to cancel the timeout if the component unmounts or state changes again
     return () => clearTimeout(debouncedSave);
-  }, [cards, selectedCardIds, studyQueue, user, isLoading]);
+  }, [cards, selectedCardIds, studyQueue]);
 
   // Effect to update the study queue when selection changes - PRESERVING ORDER
   useEffect(() => {
