@@ -4,7 +4,7 @@ import React from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import CardStatus from "./CardStatus";
 
-const FlashcardView = ({ card, onFlip, onKnow, onDontKnow, activeButton }) => {
+const FlashcardView = ({ card, onFlip, onKnow, onDontKnow }) => {
   return (
     <div className="mb-6 select-none">
       {/* The card itself */}

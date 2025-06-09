@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import flashcardsData from "../data.jsx";
 
-const STORAGE_KEY = "flashcards_state_simple_repeat_v2";
+import { LEARNED_THRESHOLD, STORAGE_KEY } from "../constants";
 
 // --- Utility Functions ---
 
@@ -32,7 +32,6 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
-const LEARNED_THRESHOLD = 5;
 
 // --- The Custom Hook ---
 
@@ -62,8 +61,6 @@ export const useFlashcards = () => {
   const [studyQueue, setStudyQueue] = useState(() => {
     return initialState?.studyQueue || [];
   });
-
-  const [activeButton, setActiveButton] = useState("");
 
   // Effect to save progress to localStorage whenever state changes
   useEffect(() => {
@@ -156,7 +153,7 @@ export const useFlashcards = () => {
         const [successfulCardId, ...rest] = prev;
         if (currentCard.knowCount >= LEARNED_THRESHOLD) return rest;
         const reinsertPosition = Math.min(
-          2 + currentCard.knowCount * 2 + Math.floor(Math.random() * 3),
+          3 + currentCard.knowCount * 2 + Math.floor(Math.random() * 3),
           rest.length
         );
         rest.splice(reinsertPosition, 0, successfulCardId);
@@ -300,6 +297,5 @@ export const useFlashcards = () => {
     shuffleQueue,
     continueLearning,
     rebuildQueue, // New function to rebuild queue if needed
-    activeButton,
   };
 };

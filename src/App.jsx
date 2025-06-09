@@ -95,7 +95,6 @@ const App = () => {
               onFlip={flipCard}
               onKnow={handleKnow}
               onDontKnow={handleDontKnow}
-              activeButton={activeButton}
             />
           ) : (
             <div className="text-center text-neutral-500 text-xl bg-neutral-800 rounded-xl p-8 mb-6">

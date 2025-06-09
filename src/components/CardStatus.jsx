@@ -3,8 +3,7 @@
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { getStatusColor } from "../utils/styleUtils";
-
-const LEARNED_THRESHOLD = 5;
+import { LEARNED_THRESHOLD } from "../constants";
 
 const CardStatus = ({ status, knowCount, className = "" }) => {
   const statusColor = getStatusColor(status);

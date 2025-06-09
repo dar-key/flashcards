@@ -4,7 +4,7 @@ import React from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { getStatusColor } from "../utils/styleUtils";
 
-const LEARNED_THRESHOLD = 5;
+import { LEARNED_THRESHOLD } from "../constants";
 
 const CardSelector = ({ cards, selectedIds, onToggle }) => {
   return (
