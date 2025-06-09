@@ -32,12 +32,10 @@ const AuthComponent = () => {
     <div className="absolute top-4 right-4">
       {user ? (
         <div className="flex items-center gap-4">
-          <span className="text-white text-sm">
-            {user.displayName}
-          </span>
+          <span className="text-white text-sm">{user.displayName}</span>
           <button
             onClick={logout}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
+            className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
           >
             Logout
           </button>
@@ -45,7 +43,7 @@ const AuthComponent = () => {
       ) : (
         <button
           onClick={login}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+          className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
         >
           Login with Google
         </button>

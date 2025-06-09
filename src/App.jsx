@@ -34,11 +34,10 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center bg-neutral-900 text-neutral-100 font-sans">
-      {isLoading && <LoadingComponent />}
       <div className="w-full max-w-4xl p-6">
         <Auth />
 
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 mt-10">
           <h1 className="text-4xl font-bold mb-2">История Казахстана</h1>
           <p className="text-neutral-400">
             Изучайте историю с помощью карточек
@@ -48,7 +47,7 @@ const App = () => {
         <main>
           {/* Controls */}
           <div className="bg-neutral-800 rounded-xl p-6 mb-6">
-            <div className="flex flex-wrap gap-4 justify-center items-center">
+            <div className="flex flex-wrap gap-3 justify-center items-center">
               <button
                 onClick={() => setShowStats(!showStats)}
                 className="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center gap-2"
@@ -73,32 +72,30 @@ const App = () => {
               >
                 Учить
               </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={selectAll}
-                  className="px-3 py-2 rounded-lg text-white text-sm"
-                >
-                  Выбрать все
-                </button>
-                <button
-                  onClick={resetProgress}
-                  className="px-3 py-2 rounded-lg hover text-white text-sm"
-                >
-                  Сбросить прогресс
-                </button>
-                <button
-                  onClick={copyProgressToClipboard}
-                  className="px-3 py-2 rounded-lg hover text-white text-sm"
-                >
-                  Копировать прогресс в буфер
-                </button>
-                <button
-                  onClick={importProgressFromClipboard}
-                  className="px-3 py-2 rounded-lg hover text-white text-sm"
-                >
-                  Импорт из буфера
-                </button>
-              </div>
+              <button
+                onClick={selectAll}
+                className="px-3 py-2 rounded-lg text-white text-sm"
+              >
+                Выбрать все
+              </button>
+              <button
+                onClick={resetProgress}
+                className="px-3 py-2 rounded-lg hover text-white text-sm"
+              >
+                Сбросить прогресс
+              </button>
+              <button
+                onClick={copyProgressToClipboard}
+                className="px-3 py-2 rounded-lg hover text-white text-sm"
+              >
+                Копировать прогресс
+              </button>
+              <button
+                onClick={importProgressFromClipboard}
+                className="px-3 py-2 rounded-lg hover text-white text-sm"
+              >
+                Импорт из буфера
+              </button>
             </div>
             <div className="mt-4 text-center text-neutral-400">
               Осталось карточек в этой сессии: {studyQueue.length}
