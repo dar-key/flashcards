@@ -34,6 +34,7 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center bg-neutral-900 text-neutral-100 font-sans">
+      {isLoading && <LoadingComponent />}
       <div className="w-full max-w-4xl p-6">
         <Auth />
 
