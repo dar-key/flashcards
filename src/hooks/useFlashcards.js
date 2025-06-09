@@ -1,27 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
+
 import flashcardsData from "../data.jsx";
 
 import { LEARNED_THRESHOLD, STORAGE_KEY } from "../constants";
 
 // --- Utility Functions ---
-
-const loadState = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  } catch (error) {
-    console.error("Failed to load state from localStorage", error);
-    return null;
-  }
-};
-
-const saveState = (state) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.error("Failed to save state to localStorage", error);
-  }
-};
 
 const shuffleArray = (array) => {
   const newArray = [...array];
@@ -32,47 +18,95 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
-
 // --- The Custom Hook ---
 
 export const useFlashcards = () => {
-  const initialState = loadState();
+  const [user] = useAuthState(auth);
+  const [isLoading, setIsLoading] = useState(true); // To show a loading message while we fetch data
 
-  const [cards, setCards] = useState(() => {
-    if (initialState?.cards) {
-      return initialState.cards;
-    }
-    return flashcardsData.map((card, index) => ({
-      ...card,
-      id: index,
-      knowCount: 0,
-      status: "new",
-      isFlipped: false,
-    }));
-  });
+  const [cards, setCards] = useState([]);
+  const [selectedCardIds, setSelectedCardIds] = useState(() => new Set());
+  const [studyQueue, setStudyQueue] = useState([]);
 
-  const [selectedCardIds, setSelectedCardIds] = useState(() => {
-    return new Set(
-      initialState?.selectedCardIds ||
-        cards.filter((c) => c.status === "notLearned").map((c) => c.id)
-    );
-  });
-
-  const [studyQueue, setStudyQueue] = useState(() => {
-    return initialState?.studyQueue || [];
-  });
-
-  // Effect to save progress to localStorage whenever state changes
   useEffect(() => {
-    saveState({
-      cards,
-      selectedCardIds: Array.from(selectedCardIds),
-      studyQueue,
-    });
-  }, [cards, selectedCardIds, studyQueue]);
+    const loadData = async () => {
+      // If there's no logged-in user, load the default data for guest usage
+      if (!user) {
+        const defaultCards = flashcardsData.map((card, index) => ({
+          ...card,
+          id: index,
+          knowCount: 0,
+          status: "new",
+          isFlipped: false,
+        }));
+        setCards(defaultCards);
+        setSelectedCardIds(new Set(defaultCards.map((c) => c.id)));
+        setIsLoading(false);
+        return;
+      }
+
+      // If a user is logged in, try to fetch their data
+      const docRef = doc(db, "users", user.uid); // Document is named after the user's unique ID
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        console.log("Document data:", docSnap.data());
+        // If the user has saved data, load it
+        const userData = docSnap.data();
+        setCards(userData.cards);
+        setSelectedCardIds(new Set(userData.selectedCardIds));
+        setStudyQueue(userData.studyQueue);
+      } else {
+        // If it's a new user, create their initial data set
+        const defaultCards = flashcardsData.map((card, index) => ({
+          ...card,
+          id: index,
+          knowCount: 0,
+          status: "new",
+          isFlipped: false,
+        }));
+        setCards(defaultCards);
+        const initialIds = new Set(defaultCards.map((c) => c.id));
+        setSelectedCardIds(initialIds);
+        // Save this initial state to their new document in Firestore
+        await setDoc(docRef, {
+          cards: defaultCards,
+          selectedCardIds: Array.from(initialIds),
+          studyQueue: [], // Start with an empty queue
+        });
+      }
+      setIsLoading(false); // We're done loading
+    };
+
+    loadData();
+  }, [user]); // This effect runs ONLY when the user logs in or out.
+
+  useEffect(() => {
+    // Don't save if there's no user, or if we are still in the initial loading state
+    if (!user || isLoading) {
+      return;
+    }
+
+    // Debounce the save function to avoid writing to Firestore on every single change.
+    // This saves after 2 seconds of inactivity, which is much more efficient.
+    const debouncedSave = setTimeout(() => {
+      const docRef = doc(db, "users", user.uid);
+      const payload = {
+        cards,
+        selectedCardIds: Array.from(selectedCardIds),
+        studyQueue,
+      };
+      setDoc(docRef, payload, { merge: true }); // { merge: true } prevents overwriting other fields
+    }, 2000);
+
+    // Cleanup function to cancel the timeout if the component unmounts or state changes again
+    return () => clearTimeout(debouncedSave);
+  }, [cards, selectedCardIds, studyQueue, user, isLoading]);
 
   // Effect to update the study queue when selection changes - PRESERVING ORDER
   useEffect(() => {
+    if (isLoading) return;
+
     setStudyQueue((prevQueue) => {
       // Remove deselected cards from the queue
       const filteredQueue = prevQueue.filter((cardId) =>
@@ -262,7 +296,6 @@ export const useFlashcards = () => {
     () => setSelectedCardIds(new Set(cards.map((c) => c.id))),
     [cards]
   );
-  const deselectAll = useCallback(() => setSelectedCardIds(new Set()), []);
 
   const showOnlyLearned = useCallback(() => {
     setSelectedCardIds(
@@ -286,13 +319,13 @@ export const useFlashcards = () => {
     currentCard,
     stats,
     selectedCardIds,
+    isLoading,
     flipCard,
     handleKnow,
     handleDontKnow,
     resetProgress,
     toggleCardSelection,
     selectAll,
-    deselectAll,
     showOnlyLearned,
     shuffleQueue,
     continueLearning,
